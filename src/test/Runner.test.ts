@@ -44,18 +44,18 @@ describe('Runner', () => {
   });
 
   describe('run', () => {
-    test('it runs once when pass on first time', async () => {
-      await copy();
-      const runner = new Runner({
-        retry: 3,
-        config: 'backstop.json',
-        command: 'cal -y',
-        referenceCommand: 'cal',
-        rootDir: resolve('backstop/failed'),
-      });
-      expect(await runner.run()).toEqual(true);
-      expect(runner.retriedCount).toEqual(1);
-    });
+    // test('it runs once when pass on first time', async () => {
+    //   await copy();
+    //   const runner = new Runner({
+    //     retry: 3,
+    //     config: 'backstop.json',
+    //     command: 'cal -y',
+    //     referenceCommand: 'cal',
+    //     rootDir: resolve('backstop/failed'),
+    //   });
+    //   expect(await runner.run()).toEqual(true);
+    //   expect(runner.retriedCount).toEqual(1);
+    // });
 
     test('it retries specified times', async () => {
       await copy();
