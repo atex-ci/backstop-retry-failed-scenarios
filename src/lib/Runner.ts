@@ -13,11 +13,13 @@ export const Runner = class Runner {
   configPath: string;
   command: string;
   referenceCommand?: string;
-  retryUntil?: boolean;
   outputProfile?: string;
   traceProfiler: TraceProfiler;
   retriedCount: number;
   exitCode: number;
+  retryUntil?: boolean;
+  _lastPassCount: number;
+
   constructor(
     options: Partial<{
       rootDir: string;
@@ -25,8 +27,8 @@ export const Runner = class Runner {
       config: string;
       command: string;
       referenceCommand: string;
-      retryUntil: boolean;
       outputProfile: string;
+      retryUntil: boolean;
     }>
   ) {
     this.rootDir = options.rootDir || process.cwd();
@@ -39,32 +41,32 @@ export const Runner = class Runner {
     this.referenceCommand = options.referenceCommand;
     this.outputProfile = options.outputProfile;
     this.traceProfiler = new TraceProfiler();
-    this.retryUntil = options.retryUntil || false;
     this.retriedCount = 0;
     this.exitCode = 1;
+
+    this.retryUntil = options.retryUntil || false;
+    this._lastPassCount = -1;
   }
 
   get config() {
     return new Config(this.rootDir, this.configPath);
   }
 
-  get lastTwoRuns() {
-    return [];
+  get lastPassCount() {
+    return this._lastPassCount;
   }
 
   static isARunNeeded(
     retriedCount: number,
     retryCount: number,
     retryUntil: boolean,
-    latestTwoRuns: Array<number>
+    lastPassCount: number
   ) {
     if (retriedCount < retryCount) return true;
-
-    if (
-      retryUntil &&
-      latestTwoRuns.length === 2 &&
-      latestTwoRuns[0] > latestTwoRuns[1]
-    ) {
+    if (retryUntil && lastPassCount > 0) {
+      console.log(
+        `I'm going to perform an additional run because I am optimistic (latest test run has ${lastPassCount} green 🟢🟢🟢🟢 tests!!) 🤞🤞🤞🤞🤞`
+      );
       return true;
     }
 
@@ -85,7 +87,7 @@ export const Runner = class Runner {
         this.retriedCount,
         this.retryCount,
         this.retryUntil || false,
-        []
+        this._lastPassCount
       )
     ) {
       this.retriedCount++;
@@ -132,6 +134,8 @@ export const Runner = class Runner {
           ciReport: config.ciReport,
         };
       }
+
+      this._lastPassCount = reports.htmlReport.passCount;
     }
     this.traceProfiler.end('run');
     this.writeProfile();
