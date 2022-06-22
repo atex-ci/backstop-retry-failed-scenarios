@@ -13,6 +13,7 @@ export const Runner = class Runner {
   configPath: string;
   command: string;
   referenceCommand?: string;
+  retryUntil?: boolean;
   outputProfile?: string;
   traceProfiler: TraceProfiler;
   retriedCount: number;
@@ -24,6 +25,7 @@ export const Runner = class Runner {
       config: string;
       command: string;
       referenceCommand: string;
+      retryUntil: boolean;
       outputProfile: string;
     }>
   ) {
@@ -37,6 +39,7 @@ export const Runner = class Runner {
     this.referenceCommand = options.referenceCommand;
     this.outputProfile = options.outputProfile;
     this.traceProfiler = new TraceProfiler();
+    this.retryUntil = options.retryUntil || false;
     this.retriedCount = 0;
     this.exitCode = 1;
   }

@@ -19,6 +19,12 @@ const optionDefinitions = [
     description: 'Trial count. default: 2(Run once, retry once). minimum: 2',
   },
   {
+    name: 'retry-until-decrease',
+    type: Boolean,
+    description:
+      'When defined allows the test suite to be repeated until the number of errors is less than the previous run',
+  },
+  {
     name: 'config',
     type: String,
     defaultValue: 'backstop.json',
@@ -69,6 +75,7 @@ const main = async () => {
     config: options.config,
     command: options.command,
     referenceCommand: options['reference-command'],
+    retryUntil: options['retry-until-decrease'],
     outputProfile: options['output-profile'],
   });
   try {
