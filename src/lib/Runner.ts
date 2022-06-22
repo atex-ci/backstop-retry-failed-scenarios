@@ -48,6 +48,10 @@ export const Runner = class Runner {
     return new Config(this.rootDir, this.configPath);
   }
 
+  get lastTwoRuns() {
+    return [];
+  }
+
   static isARunNeeded(
     retriedCount: number,
     retryCount: number,

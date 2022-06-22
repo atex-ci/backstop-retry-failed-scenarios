@@ -161,4 +161,20 @@ describe('Runner', () => {
       });
     });
   });
+
+  describe('lastTwoRuns', () => {
+    it('returns an empty array if no run has been executed', async () => {
+      await copy();
+
+      const runner = new Runner({
+        retry: 2,
+        config: 'backstop.json',
+        referenceCommand: 'not_existing_command',
+        command: 'not_existing_command',
+        rootDir: resolve('backstop/failed'),
+      });
+
+      expect(runner.lastTwoRuns).toEqual([]);
+    });
+  });
 });
