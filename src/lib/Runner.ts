@@ -48,6 +48,25 @@ export const Runner = class Runner {
     return new Config(this.rootDir, this.configPath);
   }
 
+  static isARunNeeded(
+    retriedCount: number,
+    retryCount: number,
+    retryUntil: boolean,
+    latestTwoRuns: Array<number>
+  ) {
+    if (retriedCount < retryCount) return true;
+
+    if (
+      retryUntil &&
+      latestTwoRuns.length === 2 &&
+      latestTwoRuns[0] > latestTwoRuns[1]
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   async run() {
     this.traceProfiler.start('run');
 
@@ -57,7 +76,14 @@ export const Runner = class Runner {
     const config = this.config;
     let reports;
 
-    while (this.retriedCount < this.retryCount) {
+    while (
+      Runner.isARunNeeded(
+        this.retriedCount,
+        this.retryCount,
+        this.retryUntil || false,
+        []
+      )
+    ) {
       this.retriedCount++;
       if (this.referenceCommand) {
         const referenceCommand = `${this.referenceCommand} ${filterOption}`;

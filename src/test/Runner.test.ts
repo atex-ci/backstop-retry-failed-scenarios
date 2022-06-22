@@ -127,4 +127,38 @@ describe('Runner', () => {
       expect(runner.filter).toEqual('^(BackstopJS Homepage)$');
     });
   });
+
+  describe('isARunNeeded', () => {
+    describe('when retriedCount < this.retryCount', () => {
+      it('runs', () => {
+        expect(Runner.isARunNeeded(1, 2, true, [])).toEqual(true);
+      });
+      it('runs if retryUntil is false', () => {
+        expect(Runner.isARunNeeded(1, 2, false, [])).toEqual(true);
+      });
+    });
+
+    describe('when retriedCount >= this.retryCount', () => {
+      it('does not runs if retryUntil is false', () => {
+        expect(Runner.isARunNeeded(2, 2, false, [])).toEqual(false);
+        expect(Runner.isARunNeeded(3, 2, false, [])).toEqual(false);
+      });
+
+      it('does not runs if retryUntil if got only a previous run', () => {
+        expect(Runner.isARunNeeded(2, 2, true, [])).toEqual(false);
+      });
+
+      it('does not runs if retryUntil if got only a previous run', () => {
+        expect(Runner.isARunNeeded(2, 2, true, [2])).toEqual(false);
+      });
+
+      it('does not runs if retryUntil if errors are not decreasing', () => {
+        expect(Runner.isARunNeeded(2, 2, true, [2, 2])).toEqual(false);
+      });
+
+      it('can run if retryUntil is true and errors are decreasing', () => {
+        expect(Runner.isARunNeeded(2, 2, true, [3, 2])).toEqual(true);
+      });
+    });
+  });
 });
