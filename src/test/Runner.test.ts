@@ -131,47 +131,54 @@ describe('Runner', () => {
   describe('isARunNeeded', () => {
     describe('when retriedCount < this.retryCount', () => {
       it('runs', () => {
-        expect(Runner.isARunNeeded(1, 2, true, -1)).toEqual(true);
+        expect(Runner.isARunNeeded(1, 2, true, [])).toEqual(true);
       });
       it('runs if retryUntil is false', () => {
-        expect(Runner.isARunNeeded(1, 2, false, -1)).toEqual(true);
+        expect(Runner.isARunNeeded(1, 2, false, [])).toEqual(true);
       });
     });
 
     describe('when retriedCount >= this.retryCount', () => {
       it('does not runs if retryUntil is false', () => {
-        expect(Runner.isARunNeeded(2, 2, false, 100)).toEqual(false);
-        expect(Runner.isARunNeeded(3, 2, false, 100)).toEqual(false);
+        expect(Runner.isARunNeeded(2, 2, false, [])).toEqual(false);
+        expect(Runner.isARunNeeded(3, 2, false, [])).toEqual(false);
       });
 
       it('does not runs if has no previous run', () => {
-        expect(Runner.isARunNeeded(2, 2, true, -1)).toEqual(false);
+        expect(Runner.isARunNeeded(2, 2, true, [])).toEqual(false);
       });
 
-      it('does not runs if errors are not decreasing', () => {
-        expect(Runner.isARunNeeded(2, 2, true, 0)).toEqual(false);
+      it('does not runs if has just one previous run', () => {
+        expect(Runner.isARunNeeded(2, 2, true, [1])).toEqual(false);
       });
 
-      it('run if errors are decreasing', () => {
-        expect(Runner.isARunNeeded(2, 2, true, 1)).toEqual(true);
+      it('does not runs if success are not increasing', () => {
+        expect(Runner.isARunNeeded(2, 2, true, [2, 2])).toEqual(false);
+      });
+
+      it('run if success are increasing', () => {
+        expect(Runner.isARunNeeded(2, 2, true, [1, 2])).toEqual(true);
+      });
+
+      it('run if success are increasing and runs are more than 2', () => {
+        expect(Runner.isARunNeeded(4, 2, true, [1, 2, 4, 5])).toEqual(true);
       });
     });
   });
 
-  describe('lastTwoRuns', () => {
+  describe('successes', () => {
     it('returns -1 if no run has been performed', async () => {
       const runner = new Runner({
         config: 'backstop.json',
       });
 
-      expect(runner.lastPassCount).toEqual(-1);
+      expect(runner.successes).toEqual([]);
     });
 
-    it('returns 0 if latest run is failed', async () => {
+    it('fills at least 2 element at each run', async () => {
       await copy();
 
       const runner = new Runner({
-        retry: 3,
         config: 'backstop.json',
         referenceCommand: 'not_existing_command',
         command: 'not_existing_command',
@@ -180,7 +187,23 @@ describe('Runner', () => {
 
       await runner.run();
 
-      expect(runner.lastPassCount).toEqual(0);
+      expect(runner.successes).toEqual([0, 0]);
+    });
+
+    it('add a value for each run', async () => {
+      await copy();
+
+      const runner = new Runner({
+        retry: 10,
+        config: 'backstop.json',
+        referenceCommand: 'not_existing_command',
+        command: 'not_existing_command',
+        rootDir: resolve('backstop/failed'),
+      });
+
+      await runner.run();
+
+      expect(runner.successes.length).toEqual(10);
     });
   });
 });

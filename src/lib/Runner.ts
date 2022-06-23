@@ -18,7 +18,7 @@ export const Runner = class Runner {
   retriedCount: number;
   exitCode: number;
   retryUntil?: boolean;
-  _lastPassCount: number;
+  _successes: Array<number>;
 
   constructor(
     options: Partial<{
@@ -45,27 +45,31 @@ export const Runner = class Runner {
     this.exitCode = 1;
 
     this.retryUntil = options.retryUntil || false;
-    this._lastPassCount = -1;
+    this._successes = [];
   }
 
   get config() {
     return new Config(this.rootDir, this.configPath);
   }
 
-  get lastPassCount() {
-    return this._lastPassCount;
+  get successes() {
+    return this._successes;
   }
 
   static isARunNeeded(
     retriedCount: number,
     retryCount: number,
     retryUntil: boolean,
-    lastPassCount: number
+    successes: Array<number>
   ) {
     if (retriedCount < retryCount) return true;
-    if (retryUntil && lastPassCount > 0) {
+
+    const lastTwo = [...successes.slice(-2), -1, -1];
+    const optimism = lastTwo[1] - lastTwo[0];
+
+    if (retryUntil && optimism > 0) {
       console.log(
-        `I'm going to perform an additional run because I am optimistic (latest test run has ${lastPassCount} green 🟢🟢🟢🟢 tests!!) 🤞🤞🤞🤞🤞`
+        `I'm going to perform an additional run because I am optimistic => latest test run has increased by ${optimism} green 🟢🟢🟢🟢 tests (total successes: ${lastTwo[1]})!! keep the momentum and 🤞🤞🤞🤞🤞`
       );
       return true;
     }
@@ -87,7 +91,7 @@ export const Runner = class Runner {
         this.retriedCount,
         this.retryCount,
         this.retryUntil || false,
-        this._lastPassCount
+        this._successes
       )
     ) {
       this.retriedCount++;
@@ -135,7 +139,7 @@ export const Runner = class Runner {
         };
       }
 
-      this._lastPassCount = reports.htmlReport.passCount;
+      this._successes.push(reports.htmlReport.passCount);
     }
     this.traceProfiler.end('run');
     this.writeProfile();
